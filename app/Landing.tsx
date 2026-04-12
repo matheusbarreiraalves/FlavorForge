@@ -1,11 +1,20 @@
 import colors from '@/services/colors'
 import { Marquee } from '@animatereactnative/marquee'
-import React from 'react'
+import { useLogto } from '@logto/rn'
+import React, { useEffect, useState } from 'react'
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 
 export default function Landing() {
-    const imageList = [
+  const [isClient, setIsClient] = useState(false);
+  const logtoContext = useLogto();
+  const { signIn } = logtoContext;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  const imageList = [
         require('./../assets/images/1.jpg'),
         require('./../assets/images/2.jpg'),
         require('./../assets/images/3.jpg'),
@@ -77,7 +86,11 @@ export default function Landing() {
         }}>Generate Delicious recipes in seconds with the power of AI! 🍕</Text>
 
         <TouchableOpacity
-        onPress={() => console.log("Button Click")}
+        onPress={async () => {
+          if (isClient && signIn) {
+            signIn('flavorforge://callback');
+          }
+        }}
         style={styles.button}>
             <Text style={{
                 textAlign: 'center',
