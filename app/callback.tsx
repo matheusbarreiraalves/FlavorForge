@@ -1,48 +1,45 @@
-/**
- * OAuth Callback Handler Screen
- * Processes the OAuth redirect from Logto after user authenticates
- */
-
-import { handleAuthCallback } from '@/services/authUtils';
 import colors from '@/services/colors';
 import { useLogto } from '@logto/rn';
 import * as Linking from 'expo-linking';
+import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function CallbackScreen() {
-  const { handleSignInCallback, isAuthenticated } = useLogto();
+  const { client } = useLogto();
+  const router = useRouter();
 
   useEffect(() => {
-    const processCallback = async () => {
+    const run = async () => {
       try {
-        // Get the current URL (the redirect from OAuth browser)
         const url = await Linking.getInitialURL();
 
-        if (url) {
-          console.log('[Callback] Processing OAuth redirect:', url);
-          const result = await handleAuthCallback(url, handleSignInCallback);
+        console.log('[Callback] URL recebida:', url);
 
-          if (result.success) {
-            console.log('[Callback] OAuth redirect processed, waiting for auth state update');
-            // The navigation will happen automatically based on isAuthenticated state
-          } else {
-            console.error('[Callback] Failed to process callback:', result.error);
-            // App will handle navigation based on authentication state
-          }
+        if (url) {
+          // Use the client directly for callback handling
+          await client.handleSignInCallback(url);
+
+          console.log('[Callback] Login finalizado com sucesso');
+
+          // 🔥 Delay to allow Logto state to stabilize before redirect
+          setTimeout(() => {
+            router.replace('/');
+          }, 300);
         } else {
-          console.log('[Callback] No initial URL detected');
+          console.log('[Callback] Nenhuma URL encontrada');
+          // If no URL, go back to index to let it decide navigation
+          router.replace('/');
         }
       } catch (error) {
-        console.error('[Callback] Error in callback handler:', error);
+        console.error('[Callback] Erro:', error);
+        // On error, go back to index
+        router.replace('/');
       }
     };
 
-    // Only process if we're not already authenticated
-    if (!isAuthenticated) {
-      processCallback();
-    }
-  }, [handleSignInCallback, isAuthenticated]);
+    run();
+  }, [client, router]);
 
   return (
     <View

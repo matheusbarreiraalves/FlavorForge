@@ -70,10 +70,8 @@ export default function Landing() {
       console.log('[Landing] Starting sign-in flow...');
 
       // Use the auth utility for proper error handling
-      const result = await performSignIn(
-        signIn,
-        'exp://192.168.1.8:8081'
-      );
+      // Redirect URI is automatically determined based on platform
+      const result = await performSignIn(signIn);
 
       if (result.success) {
         console.log('[Landing] Sign-in initiated successfully, waiting for callback...');
