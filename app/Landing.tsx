@@ -1,37 +1,22 @@
-import { performSignIn } from '@/services/authUtils'
-import colors from '@/services/colors'
-import { Marquee } from '@animatereactnative/marquee'
-import { useLogto } from '@logto/rn'
-import React, { useEffect, useState } from 'react'
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { GestureHandlerRootView } from 'react-native-gesture-handler'
-
+import { performSignIn } from '@/services/authUtils';
+import colors from '@/services/colors';
+import { Marquee } from '@animatereactnative/marquee';
+import { useLogto } from '@logto/rn';
+import React, { useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function Landing() {
-  const [isClient, setIsClient] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
-  const logtoContext = useLogto();
-  const { signIn, signOut, isAuthenticated } = logtoContext;
-
-  // Ensure hydration only happens on client
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
-  // Defensive check for null context
-  if (!isClient || !logtoContext) {
-    return null;
-  }
-
-  // If already authenticated, show loading indicator briefly
-  // (Navigation will happen via auth state in _layout)
-  if (isAuthenticated) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.WHITE }}>
-        <ActivityIndicator size="large" color={colors.PRIMARY} />
-      </View>
-    );
-  }
+  const { signIn } = useLogto();
 
   const imageList = [
     require('./../assets/images/1.jpg'),
@@ -44,73 +29,43 @@ export default function Landing() {
     require('./../assets/images/c3.jpg'),
   ];
 
-  /**
-   * Handles the sign-in button press
-   * Wraps signIn in try/catch and manages loading state
-   */
   const handleSignInPress = async () => {
-    // Prevent multiple sign-in attempts
     if (isSigningIn) {
-      console.log('[Landing] Sign-in already in progress, ignoring duplicate request');
+      console.log('[Landing] Sign-in already in progress');
+      return;
+    }
+
+    if (!signIn || typeof signIn !== 'function') {
+      Alert.alert(
+        'Authentication Error',
+        'Authentication service is unavailable.'
+      );
       return;
     }
 
     try {
-      // Check if signIn function exists (defensive check)
-      if (!signIn || typeof signIn !== 'function') {
-        console.error('[Landing] signIn function is not available');
-        Alert.alert(
-          'Authentication Error',
-          'Authentication service is not ready. Please try again.',
-        );
-        return;
-      }
-
       setIsSigningIn(true);
-      console.log('[Landing] Starting sign-in flow...');
 
-      // Use the auth utility for proper error handling
-      // Redirect URI is automatically determined based on platform
+      console.log('[Landing] Starting sign-in flow');
+
       const result = await performSignIn(signIn);
 
-      if (result.success) {
-        console.log('[Landing] Sign-in initiated successfully, waiting for callback...');
-        // User will be redirected to callback screen, which processes the OAuth redirect
-        // Navigation happens automatically based on isAuthenticated state
-      } else {
-        // Handle different error types
-        if (result.error === 'AUTH_CANCELLED') {
-          console.log('[Landing] User cancelled sign-in, no action required');
-          // User cancelled - just reset loading state and return to landing
-          setIsSigningIn(false);
-          // No alert needed for user cancellation
-        } else {
-          console.error('[Landing] Sign-in failed:', result.error);
-          setIsSigningIn(false);
+      if (!result.success) {
+        setIsSigningIn(false);
+
+        if (result.error !== 'AUTH_CANCELLED') {
           Alert.alert(
-            'Sign-In Failed',
-            result.error || 'Failed to sign in. Please try again.',
-            [
-              {
-                text: 'OK',
-                onPress: () => console.log('[Landing] Error dismissed by user'),
-              },
-            ]
+            'Login Failed',
+            result.error || 'Unable to sign in.'
           );
         }
       }
     } catch (error) {
-      console.error('[Landing] Unexpected error during sign-in:', error);
+      console.error('[Landing] Unexpected sign-in error:', error);
       setIsSigningIn(false);
       Alert.alert(
         'Unexpected Error',
-        'An unexpected error occurred. Please try again.',
-        [
-          {
-            text: 'OK',
-            onPress: () => console.log('[Landing] Unexpected error dismissed'),
-          },
-        ]
+        'Something went wrong during sign in.'
       );
     }
   };
@@ -125,12 +80,13 @@ export default function Landing() {
             transform: [{ rotate: '-4deg' }],
           }}
         >
-          <View style={styles.ImageContainer}>
+          <View style={styles.imageContainer}>
             {imageList.map((image, index) => (
-              <Image key={index} source={image} style={styles.Image} />
+              <Image key={index} source={image} style={styles.image} />
             ))}
           </View>
         </Marquee>
+
         <Marquee
           spacing={10}
           speed={0.4}
@@ -139,12 +95,13 @@ export default function Landing() {
             marginTop: 10,
           }}
         >
-          <View style={styles.ImageContainer}>
+          <View style={styles.imageContainer}>
             {imageList.map((image, index) => (
-              <Image key={index} source={image} style={styles.Image} />
+              <Image key={index} source={image} style={styles.image} />
             ))}
           </View>
         </Marquee>
+
         <Marquee
           spacing={10}
           speed={0.5}
@@ -153,40 +110,21 @@ export default function Landing() {
             marginTop: 10,
           }}
         >
-          <View style={styles.ImageContainer}>
+          <View style={styles.imageContainer}>
             {imageList.map((image, index) => (
-              <Image key={index} source={image} style={styles.Image} />
+              <Image key={index} source={image} style={styles.image} />
             ))}
           </View>
         </Marquee>
       </View>
 
-      <View
-        style={{
-          backgroundColor: colors.WHITE,
-          height: '100%',
-          padding: 20,
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: 'outfit-bold',
-            fontSize: 25,
-            textAlign: 'center',
-          }}
-        >
+      <View style={styles.contentContainer}>
+        <Text style={styles.title}>
           FlavorForge AI 🍛🔎 | Find, Create & Enjoy delicious recipes of your own!
         </Text>
-        <Text
-          style={{
-            textAlign: 'center',
-            fontFamily: 'outfit',
-            fontSize: 17,
-            color: colors.GRAY,
-            marginTop: 7,
-          }}
-        >
-          Generate Delicious recipes in seconds with the power of AI! 🍕
+
+        <Text style={styles.subtitle}>
+          Generate delicious recipes in seconds with the power of AI! 🍕
         </Text>
 
         <TouchableOpacity
@@ -200,35 +138,56 @@ export default function Landing() {
           {isSigningIn ? (
             <ActivityIndicator size="small" color={colors.WHITE} />
           ) : (
-            <Text
-              style={{
-                textAlign: 'center',
-                color: colors.WHITE,
-                fontSize: 17,
-                fontFamily: 'outfit',
-              }}
-            >
+            <Text style={styles.buttonText}>
               Get Started
             </Text>
           )}
         </TouchableOpacity>
-        {/* <Button title="Sign Out" onPress={async () => signOut()} /> */}
+        
       </View>
     </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  Image: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.WHITE,
+  },
+
+  image: {
     width: 160,
     height: 160,
     borderRadius: 25,
   },
-  ImageContainer: {
-    display: 'flex',
+
+  imageContainer: {
     flexDirection: 'row',
     gap: 10,
   },
+
+  contentContainer: {
+    backgroundColor: colors.WHITE,
+    height: '100%',
+    padding: 20,
+  },
+
+  title: {
+    fontFamily: 'outfit-bold',
+    fontSize: 25,
+    textAlign: 'center',
+  },
+
+  subtitle: {
+    textAlign: 'center',
+    fontFamily: 'outfit',
+    fontSize: 17,
+    color: colors.GRAY,
+    marginTop: 7,
+  },
+
   button: {
     backgroundColor: colors.PRIMARY,
     padding: 15,
@@ -237,7 +196,15 @@ const styles = StyleSheet.create({
     minHeight: 50,
     justifyContent: 'center',
   },
+
   buttonDisabled: {
     opacity: 0.6,
+  },
+
+  buttonText: {
+    textAlign: 'center',
+    color: colors.WHITE,
+    fontSize: 17,
+    fontFamily: 'outfit',
   },
 });

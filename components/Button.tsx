@@ -1,13 +1,14 @@
 import colors from '@/services/colors';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 
 
-export default function Button({label, onPress, icon =''}:any) {
+export default function Button({label, onPress, icon ='', loading = false}:any) {
   return (
     <TouchableOpacity
       onPress={onPress}
+      disabled={loading}
       style={{
           backgroundColor: colors.PRIMARY,
           padding: 15,
@@ -20,7 +21,8 @@ export default function Button({label, onPress, icon =''}:any) {
           gap: 10,
           alignItems: 'center',
         }}>
-            <Ionicons name={icon} size={20} color="white" />
+          {loading ? <ActivityIndicator color={colors.WHITE}/>:
+            <Ionicons name={icon} size={20} color="white" />}
       <Text
       style={{
         textAlign: 'center',

@@ -22,10 +22,7 @@ export default function CallbackScreen() {
 
           console.log('[Callback] Login finalizado com sucesso');
 
-          // 🔥 Delay to allow Logto state to stabilize before redirect
-          setTimeout(() => {
-            router.replace('/');
-          }, 300);
+          router.replace('/');
         } else {
           console.log('[Callback] Nenhuma URL encontrada');
           // If no URL, go back to index to let it decide navigation

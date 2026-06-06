@@ -1,6 +1,12 @@
 import { UserContext } from '@/context/UserContext';
-import { LogtoProvider, UserScope, type LogtoConfig } from '@logto/rn';
-import { Stack } from "expo-router";
+import {
+  LogtoProvider,
+  UserScope,
+  type LogtoConfig,
+} from '@logto/rn';
+
+import { Stack } from 'expo-router';
+
 import React, { useEffect, useState } from 'react';
 
 const logtoConfig: LogtoConfig = {
@@ -10,30 +16,30 @@ const logtoConfig: LogtoConfig = {
 };
 
 function RootLayoutContent() {
-  // 🔥 REMOVIDO: callback handling movido para callback.tsx
-  // 🔥 REMOVIDO: isLoading check (era unreliable/undefined)
-
   return (
-    <Stack
-      screenOptions={{ headerShown: false }}
-    >
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
-      <Stack.Screen name="Landing" />
-      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="landing" />
       <Stack.Screen name="callback" />
+      <Stack.Screen name="(tabs)" />
     </Stack>
   );
 }
 
 export default function RootLayout() {
-  const [isClient, setIsClient] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    setIsClient(true);
+    // ONLY run on browser/client
+    setMounted(true);
   }, []);
 
-  if (!isClient) return null;
+  // Prevent SSR rendering completely
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <LogtoProvider config={logtoConfig}>

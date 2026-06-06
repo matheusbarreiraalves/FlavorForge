@@ -1,10 +1,33 @@
-import React, { useState } from 'react';
-import { Image, StyleSheet, Text, View, } from 'react-native';
+import colors from '@/services/colors';
+import GlobalApi from '@/services/GlobalApi';
+import React, { useRef, useState } from 'react';
+import { Alert, Image, StyleSheet, Text, View } from 'react-native';
+import ActionSheet, { ActionSheetRef } from "react-native-actions-sheet";
 import { TextInput } from 'react-native-gesture-handler';
+import GENERATE_RECIPE_OPTION_PROMPT from './../services/Prompt';
 import Button from './Button';
 
 export default function CreateRecipe() {
   const [userInput, setUserInput] = useState<string>('');
+  const [recipeOptions, setRecipeOptions] = useState<any>([]);
+  const [loading, setLoading] = useState(false);
+  const actionSheetRef = useRef<ActionSheetRef>(null);
+
+  const OnGenerate =async()=>{
+    if(!userInput)
+      {
+        Alert.alert('Please enter your recipe or ingredients');
+        return;
+      }
+    setLoading(true);
+    const result=await GlobalApi.AiModel(userInput+GENERATE_RECIPE_OPTION_PROMPT);
+
+    
+    const content = result?.choices[0].message?.content;
+    content && setRecipeOptions(JSON.parse(content));
+    setLoading(false);
+   actionSheetRef.current?.show()
+  }
   return (
     <View style={styles.container}>
       <Image source={require('./../assets/images/pan.gif')} 
@@ -21,7 +44,29 @@ export default function CreateRecipe() {
       onChangeText={(value)=>setUserInput(value)}
       />
 
-      <Button label={'Create Recipe'} icon={"sparkles"} />
+      <Button label={'Create Recipe'} icon={"sparkles"} 
+      loading={loading}
+      />
+
+      <ActionSheet ref={actionSheetRef}>
+        <View style={styles.actionSheetContainer}>
+          <Text style={styles.heading}>Select Recipe!</Text>
+          <View>
+            {recipeOptions?.map((item: any, index: any) => (
+              <View key={index} style={styles.recipeOptionContainer}>
+                <Text style={{
+                  fontFamily: 'outfit-bold',
+                  fontSize: 16,
+                }}>{item?.recipeName}</Text>
+                <Text style={{
+                  fontFamily: 'outfit',
+                  color:colors.GRAY,
+                }}>{item?.description}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      </ActionSheet>
     </View>
   )
 }
@@ -60,4 +105,13 @@ const styles = StyleSheet.create({
         marginTop: 15,
         textAlignVertical: 'top',
     },
+    actionSheetContainer:{
+        padding: 25,
+    },
+    recipeOptionContainer:{
+      padding: 15,
+      borderWidth: 0.2,
+      borderRadius: 15,
+      marginTop: 15,
+    }
 })
